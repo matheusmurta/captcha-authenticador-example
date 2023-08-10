@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { RecaptchaComponent } from 'ng-recaptcha';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 
 @Component({
   selector: 'app-root',
@@ -8,19 +9,32 @@ import { RecaptchaComponent } from 'ng-recaptcha';
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent {
-  recaptchaResponse: string ="";
-  constructor(private http: HttpClient) {}
+  myForm: FormGroup;
+  porcentagem: number = 0;
 
-  onSubmit() {
-    this.http.post('http://localhost:3000/api/authenticate', { recaptcha: this.recaptchaResponse }).subscribe({
-      next: (data)=>{console.log(data)
-    },
-      error: (err)=>console.log(err),
+  constructor(private fb: FormBuilder) {
+    this.myForm = this.fb.group({
+      campo1: ['', Validators.required],
+      campo2: ['', Validators.required],
+      campo3: ['', Validators.required],
     });
+
+    this.myForm.valueChanges.subscribe(() => {
+      const totalCampos = Object.keys(this.myForm.controls).length;
+      const camposPreenchidos = Object.keys(this.myForm.controls).filter(controlName => this.myForm.get(controlName)?.valid).length;
+      
+      if (camposPreenchidos === totalCampos) {
+        this.porcentagem = 100;
+      } else {
+        this.porcentagem = (camposPreenchidos / totalCampos) * 100;
+      }
+    });
+    
   }
 
-  resolved(captchaResponse: string) {
-    this.recaptchaResponse = captchaResponse;
-    console.log(`Resolved captcha with response: ${captchaResponse}`);
+  resetvalidator(){
+    this.myForm.get('campo3')?.reset();
+    this.myForm.updateValueAndValidity();
+
   }
 }
